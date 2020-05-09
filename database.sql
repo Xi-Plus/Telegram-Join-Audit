@@ -25,8 +25,8 @@ CREATE TABLE `user` (
   `username` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `status` enum('new','filling','submitted','rejected','banned','approved','joined') COLLATE utf8mb4_bin NOT NULL DEFAULT 'new',
   `admin_comment` text COLLATE utf8mb4_bin,
-  `question` text COLLATE utf8mb4_bin NOT NULL,
-  `answer` text COLLATE utf8mb4_bin NOT NULL
+  `question` text COLLATE utf8mb4_bin,
+  `answer` text COLLATE utf8mb4_bin
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 
