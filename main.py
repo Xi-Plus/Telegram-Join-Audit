@@ -124,14 +124,11 @@ class Userinfo():
 def handle_user(update):
     text = update.message.text
     user_id = update.effective_user.id
-    full_name = update.effective_user.first_name
-    if update.effective_user.last_name:
-        full_name += ' ' + update.effective_user.last_name
 
     log('user {} {}'.format(user_id, text))
 
     userinfo = Userinfo(user_id)
-    userinfo.update_name(full_name, update.effective_user.username)
+    userinfo.update_name(update.effective_user.full_name, update.effective_user.username)
 
     if userinfo.status == STATUS.NEW:
         if text == '/start':
@@ -236,12 +233,9 @@ def handle_user(update):
 def handle_censored(update):
     if update.message.new_chat_members:
         user_id = update.effective_user.id
-        full_name = update.effective_user.first_name
-        if update.effective_user.last_name:
-            full_name += ' ' + update.effective_user.last_name
 
         userinfo = Userinfo(user_id)
-        userinfo.update_name(full_name, update.effective_user.username)
+        userinfo.update_name(update.effective_user.full_name, update.effective_user.username)
 
         if userinfo.status == STATUS.APPROVED:
             userinfo.update_status(STATUS.JOINED)
