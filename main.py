@@ -212,7 +212,7 @@ class System:
 
                 message = (
                     '收到一則來自 {} 的申請\n'
-                    + '使用 /review {} 來查看申請'
+                    + '使用 /review_{} 來查看申請'
                 ).format(userinfo.format_full(), userinfo.user_id)
                 self.bot.send_message(
                     chat_id=ADMIN_CHAT_ID,
@@ -332,7 +332,7 @@ class System:
 
         self.log('admin {}'.format(text))
 
-        m = re.search(r'^/review (\d+)$', text)
+        m = re.search(r'^/review[ _](\d+)(?:@{})$'.format(self.bot.username), text)
         if m:
             reviewed_user_id = int(m.group(1))
             userinfo = Userinfo(reviewed_user_id)
