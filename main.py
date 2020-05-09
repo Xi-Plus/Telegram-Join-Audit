@@ -435,6 +435,23 @@ class System:
                     parse_mode=telegram.ParseMode.HTML,
                 )
 
+        if re.search(r'^/list_?request$', text):
+            cur.execute("""SELECT `user_id` FROM `user` WHERE `status` = %s""",
+                        (STATUS.SUBMITTED))
+            rows = cur.fetchall()
+            if len(rows) == 0:
+                message = '目前沒有申請'
+            else:
+                message = '目前有{}筆申請：\n'.format(len(rows))
+                for row in rows:
+                    userinfo = Userinfo(row[0])
+                    message += '{}\n'.format(userinfo.format_full())
+                message += '使用 /review 來查看申請'
+            update.message.reply_text(
+                message,
+                parse_mode=telegram.ParseMode.HTML,
+            )
+
         m = re.search(r'^/(grant|revoke)[_ ](grant|review)$', text)
         if m:
             action = m.group(1)
