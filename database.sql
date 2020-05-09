@@ -14,6 +14,11 @@ CREATE TABLE `log` (
   `text` text COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+CREATE TABLE `permissions` (
+  `admin_user_id` int(11) NOT NULL,
+  `permission` enum('super','grant','review') COLLATE utf8mb4_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
 CREATE TABLE `user` (
   `user_id` int(11) NOT NULL,
   `full_name` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
@@ -24,6 +29,9 @@ CREATE TABLE `user` (
   `answer` text COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
+
+ALTER TABLE `permissions`
+  ADD PRIMARY KEY (`admin_user_id`,`permission`);
 
 ALTER TABLE `user`
   ADD PRIMARY KEY (`user_id`);

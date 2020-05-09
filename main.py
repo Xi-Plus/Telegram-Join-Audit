@@ -27,6 +27,12 @@ class STATUS:
     JOINED = 'joined'
 
 
+class PERMISSION:
+    SUPER = 'super'
+    GRANT = 'grant'
+    REVIEW = 'review'
+
+
 def log(text):
     cur.execute("""INSERT INTO `log` (`text`) VALUES (%s)""",
                 (str(text)))
@@ -118,6 +124,27 @@ class Userinfo():
     def update_admin_comment(self, admin_comment):
         cur.execute("""UPDATE `user` SET `admin_comment` = %s WHERE `user_id` = %s""",
                     (admin_comment, self.user_id))
+        db.commit()
+
+    def get_permissions(self):
+        permissions = []
+
+        cur.execute("""SELECT `permission` FROM `permissions` WHERE `admin_user_id` = %s""",
+                    (self.user_id))
+        rows = cur.fetchall()
+        for row in rows:
+            permissions.append(row[0])
+
+        return permissions
+
+    def grant(self, permission):
+        cur.execute("""INSERT INTO `permissions` (`admin_user_id`, `permission`) VALUES (%s, %s)""",
+                    (self.user_id, permission))
+        db.commit()
+
+    def revoke(self, permission):
+        cur.execute("""DELETE FROM `permissions` WHERE `admin_user_id` = %s AND `permission` = %s""",
+                    (self.user_id, permission))
         db.commit()
 
 
@@ -250,6 +277,7 @@ def handle_censored(update):
 
 def handle_admin(update):
     text = update.message.text
+    admininfo = Userinfo(update.effective_user.id)
 
     log('admin {}'.format(text))
 
@@ -266,13 +294,18 @@ def handle_admin(update):
                 + '答案如下：\n'
                 + '{2}\n'
                 + '-----\n'
-                + '使用 /comment 設定回應訊息\n'
-                + '/approve 接受申請，/reject 拒絕申請'
             ).format(
                 userinfo.format_full(),
                 userinfo.question,
                 userinfo.answer,
             )
+            if PERMISSION.REVIEW in admininfo.get_permissions():
+                message += (
+                    '使用 /comment 設定回應訊息\n'
+                    + '/approve 接受申請，/reject 拒絕申請'
+                )
+            else:
+                message += '您沒有權限審核申請'
             update.message.reply_text(message, parse_mode=telegram.ParseMode.HTML)
         else:
             update.message.reply_text(
@@ -282,6 +315,12 @@ def handle_admin(update):
 
     m = re.search(r'^/comment\s*(\d+)\s*([\s\S]+)$', text)
     if m:
+        if PERMISSION.REVIEW not in admininfo.get_permissions():
+            update.message.reply_text(
+                '您沒有足夠權限進行此操作',
+            )
+            return
+
         reviewed_user_id = int(m.group(1))
         comment = m.group(2)
 
@@ -300,6 +339,12 @@ def handle_admin(update):
     if m:
         reviewed_user_id = int(m.group(1))
         userinfo = Userinfo(reviewed_user_id)
+
+        if PERMISSION.REVIEW not in admininfo.get_permissions():
+            update.message.reply_text(
+                '您沒有足夠權限進行此操作',
+            )
+            return
 
         if userinfo.status == STATUS.SUBMITTED:
             userinfo.update_status(STATUS.APPROVED)
@@ -327,6 +372,12 @@ def handle_admin(update):
     if m:
         reviewed_user_id = int(m.group(1))
         userinfo = Userinfo(reviewed_user_id)
+
+        if PERMISSION.REVIEW not in admininfo.get_permissions():
+            update.message.reply_text(
+                '您沒有足夠權限進行此操作',
+            )
+            return
 
         if userinfo.status == STATUS.SUBMITTED:
             userinfo.update_status(STATUS.REJECTED)
@@ -364,6 +415,58 @@ def handle_admin(update):
             update.message.reply_text(
                 '{} 從未申請過，無法封鎖'.format(userinfo.format_user_id()),
                 parse_mode=telegram.ParseMode.HTML,
+            )
+
+    m = re.search(r'^/(grant|revoke)[_ ](grant|review)$', text)
+    if m:
+        action = m.group(1)
+        permission = m.group(2)
+        required_permissions = {
+            'grant': PERMISSION.SUPER,
+            'review': PERMISSION.GRANT,
+        }
+        given_permission = {
+            'grant': PERMISSION.GRANT,
+            'review': PERMISSION.REVIEW,
+        }
+
+        if required_permissions[permission] not in admininfo.get_permissions():
+            update.message.reply_text(
+                '您沒有足夠權限進行此操作',
+            )
+            return
+
+        if update.message.reply_to_message:
+            reply_to_message = update.message.reply_to_message
+            target_user_id = reply_to_message.from_user.id
+
+            userinfo = Userinfo(target_user_id)
+
+            userinfo.update_name(reply_to_message.from_user.full_name, reply_to_message.from_user.username)
+
+            if action == 'grant':
+                userinfo.grant(given_permission[permission])
+                update.message.reply_text(
+                    '已成功授予 {} {} 權限'.format(
+                        userinfo.format_full(),
+                        given_permission[permission],
+                    ),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+            elif action == 'revoke':
+                userinfo.revoke(given_permission[permission])
+                update.message.reply_text(
+                    '已成功除去 {} {} 權限'.format(
+                        userinfo.format_full(),
+                        given_permission[permission],
+                    ),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+            else:
+                log('unknown action')
+        else:
+            update.message.reply_text(
+                '需回應訊息以授權/除權',
             )
 
 
