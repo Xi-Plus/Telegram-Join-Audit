@@ -286,8 +286,15 @@ class System:
 
             if userinfo.status == STATUS.APPROVED:
                 userinfo.update_status(STATUS.JOINED)
+                update.message.reply_text(
+                    '{} 已通過申請'.format(userinfo.format_full()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
             elif userinfo.status == STATUS.JOINED:
-                update.message.reply_text('已通過申請')
+                update.message.reply_text(
+                    '{} 已通過申請'.format(userinfo.format_full()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
             else:
                 update.effective_chat.kick_member(
                     user_id=user_id,
