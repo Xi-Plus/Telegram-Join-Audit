@@ -155,6 +155,10 @@ class System:
 
     def handle_user(self, update):
         text = update.message.text
+
+        if text is None:
+            return
+
         user_id = update.effective_user.id
 
         self.log('user {} {}'.format(user_id, text))
@@ -292,6 +296,10 @@ class System:
 
     def handle_admin(self, update):
         text = update.message.text
+
+        if text is None:
+            return
+
         admininfo = Userinfo(update.effective_user.id)
 
         self.log('admin {}'.format(text))
