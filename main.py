@@ -119,9 +119,12 @@ class Userinfo():
         return permissions
 
     def grant(self, permission):
-        cur.execute("""INSERT INTO `permissions` (`admin_user_id`, `permission`) VALUES (%s, %s)""",
-                    (self.user_id, permission))
-        db.commit()
+        try:
+            cur.execute("""INSERT INTO `permissions` (`admin_user_id`, `permission`) VALUES (%s, %s)""",
+                        (self.user_id, permission))
+            db.commit()
+        except pymysql.err.IntegrityError:
+            pass
 
     def revoke(self, permission):
         cur.execute("""DELETE FROM `permissions` WHERE `admin_user_id` = %s AND `permission` = %s""",
