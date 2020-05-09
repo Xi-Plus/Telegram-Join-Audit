@@ -362,6 +362,8 @@ class System:
                     parse_mode=telegram.ParseMode.HTML,
                 )
 
+                self.bot.unban_chat_member(chat_id=CENSORED_CHAT_ID, user_id=reviewed_user_id)
+
                 message = '您的入群申請已通過'
                 if userinfo.admin_comment:
                     message += '\n管理員有此留言：{}\n'.format(userinfo.admin_comment)
