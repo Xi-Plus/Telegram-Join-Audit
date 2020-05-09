@@ -68,7 +68,7 @@ class Userinfo():
         if not self.exists:
             return self.format_user_id()
 
-        return '{0} <a href="tg://user?id={0}">{1}</a> {2}'.format(
+        return '{0} <a href="tg://user?id={0}">{1}</a>{2}'.format(
             self.user_id,
             self.full_name,
             ' (@{})'.format(self.username) if self.username else '',
