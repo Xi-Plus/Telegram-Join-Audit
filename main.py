@@ -4,7 +4,7 @@ import re
 import pymysql
 import telegram
 
-from config import *  # pylint: disable=E0401
+from config import *  # pylint: disable=E0401,W0401,W0614
 
 bot = telegram.Bot(TG_TOKEN)
 db = pymysql.connect(
