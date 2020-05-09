@@ -163,12 +163,14 @@ class System:
         userinfo.update_name(update.effective_user.full_name, update.effective_user.username)
 
         if userinfo.status == STATUS.NEW:
-            if text == '/start':
-                update.message.reply_text(
-                    '您從未進行過任何申請，使用 /request 開始新申請'
-                )
-            elif text == '/request':
+            if text == '/request':
                 self.user_new_request(update, userinfo)
+                return
+
+            update.message.reply_text(
+                '您從未進行過任何申請，使用 /request 開始新申請'
+            )
+            return
 
         elif userinfo.status == STATUS.FILLING:
             if text == '/request':
@@ -203,9 +205,13 @@ class System:
                     '您的入群申請已送出，請耐心等候'
                 )
 
+                message = (
+                    '收到一則來自 {} 的申請\n'
+                    + '使用 /review {} 來查看申請'
+                ).format(userinfo.format_full(), userinfo.user_id)
                 self.bot.send_message(
                     chat_id=ADMIN_CHAT_ID,
-                    text='收到一則來自 {} 的申請'.format(userinfo.format_full()),
+                    text=message,
                     parse_mode=telegram.ParseMode.HTML,
                 )
                 return
