@@ -362,14 +362,14 @@ class System:
 
         m = re.search(r'^/approve (\d+)$', text)
         if m:
-            reviewed_user_id = int(m.group(1))
-            userinfo = Userinfo(reviewed_user_id)
-
             if PERMISSION.REVIEW not in admininfo.get_permissions():
                 update.message.reply_text(
                     '您沒有足夠權限進行此操作',
                 )
                 return
+
+            reviewed_user_id = int(m.group(1))
+            userinfo = Userinfo(reviewed_user_id)
 
             if userinfo.status == STATUS.SUBMITTED:
                 userinfo.update_status(STATUS.APPROVED)
@@ -398,14 +398,14 @@ class System:
 
         m = re.search(r'^/reject (\d+)$', text)
         if m:
-            reviewed_user_id = int(m.group(1))
-            userinfo = Userinfo(reviewed_user_id)
-
             if PERMISSION.REVIEW not in admininfo.get_permissions():
                 update.message.reply_text(
                     '您沒有足夠權限進行此操作',
                 )
                 return
+
+            reviewed_user_id = int(m.group(1))
+            userinfo = Userinfo(reviewed_user_id)
 
             if userinfo.status == STATUS.SUBMITTED:
                 userinfo.update_status(STATUS.REJECTED)
@@ -523,6 +523,12 @@ class System:
 
         m = re.search(r'/set_status (\d+) (new|filling|submitted|rejected|banned|approved|joined)$', text)
         if m and DEBUG_MODE:
+            if PERMISSION.REVIEW not in admininfo.get_permissions():
+                update.message.reply_text(
+                    '您沒有足夠權限進行此操作',
+                )
+                return
+
             reviewed_user_id = int(m.group(1))
             userinfo = Userinfo(reviewed_user_id)
             status = m.group(2)
@@ -542,6 +548,12 @@ class System:
 
         m = re.search(r'/delete (\d+)$', text)
         if m and DEBUG_MODE:
+            if PERMISSION.REVIEW not in admininfo.get_permissions():
+                update.message.reply_text(
+                    '您沒有足夠權限進行此操作',
+                )
+                return
+
             reviewed_user_id = int(m.group(1))
             userinfo = Userinfo(reviewed_user_id)
 
