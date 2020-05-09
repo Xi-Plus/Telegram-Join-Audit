@@ -3,6 +3,8 @@ ADMIN_CHAT_ID = -1000000000000
 
 DEBUG_MODE = False
 
+BAN_DURATION = 0  # forever
+
 DB_HOST = 'localhost'
 DB_USER = ''
 DB_PASS = ''

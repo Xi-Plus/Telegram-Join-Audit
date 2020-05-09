@@ -1,5 +1,6 @@
 import random
 import re
+import time
 
 import pymysql
 import telegram
@@ -314,9 +315,11 @@ class System:
                     '{} 未通過申請'.format(userinfo.format_full()),
                     parse_mode=telegram.ParseMode.HTML,
                 )
+
+                until_date = int(time.time() + BAN_DURATION)
                 update.effective_chat.kick_member(
                     user_id=user_id,
-                    until_date=0,
+                    until_date=until_date,
                 )
 
     def handle_admin(self, update):
