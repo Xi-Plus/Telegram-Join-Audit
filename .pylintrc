@@ -164,6 +164,7 @@ disable=print-statement,
         consider-using-sys-exit,
         undefined-variable,
         no-name-in-module,
+        too-many-return-statements,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
