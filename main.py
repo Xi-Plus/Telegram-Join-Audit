@@ -229,6 +229,7 @@ class System:
             update.message.reply_text(
                 '您的入群申請已送出，請耐心等候'
             )
+
         elif userinfo.status == STATUS.REJECTED:
             if text == '/request':
                 self.user_new_request(update, userinfo)
@@ -239,29 +240,31 @@ class System:
                 message += '使用 /request 再次提出申請'
 
                 update.message.reply_text(message)
+
         elif userinfo.status == STATUS.BANNED:
             update.message.reply_text(
                 '您已被禁止提出新申請'
             )
+
         elif userinfo.status == STATUS.APPROVED:
             if text == '/join':
-                link = self.bot.export_chat_invite_link(chat_id=CENSORED_CHAT_ID)
-                message = (
-                    '加群連結為\n'
-                    + '{}\n'
-                    + '請立即加入群組以免連結失效\n'
-                    + '此連結僅限您可使用，分享給他人將導致您的入群許可被撤銷'
-                ).format(link)
+                self.user_join_link(update)
+                return
 
-                update.message.reply_text(message)
-            else:
-                update.message.reply_text(
-                    '您已通過申請，使用 /join 取得入群連結'
-                )
-        elif userinfo.status == STATUS.JOINED:
             update.message.reply_text(
-                '您已加入群組'
+                '您已通過申請，使用 /join 取得入群連結'
             )
+            return
+
+        elif userinfo.status == STATUS.JOINED:
+            if text == '/join' and DEBUG_MODE:
+                self.user_join_link(update)
+                return
+
+            update.message.reply_text(
+                '您已加入群組',
+            )
+            return
 
     def user_new_request(self, update, userinfo):
         user_questions = []
@@ -276,6 +279,17 @@ class System:
         update.message.reply_text(
             '您的入群問題為：\n{}\n----\n請使用 /answer 換行後接著您的答案，答案請註明題號'.format(user_questions)
         )
+
+    def user_join_link(self, update):
+        link = self.bot.export_chat_invite_link(chat_id=CENSORED_CHAT_ID)
+        message = (
+            '加群連結為\n'
+            + '{}\n'
+            + '請立即加入群組以免連結失效\n'
+            + '此連結僅限您可使用，分享給他人將導致您的入群許可被撤銷'
+        ).format(link)
+
+        update.message.reply_text(message)
 
     def handle_censored(self, update):
         if update.message.new_chat_members:
