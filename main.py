@@ -76,7 +76,7 @@ class Userinfo():
     def update_name(self, full_name, username):
         if not self.exists:
             cur.execute("""INSERT INTO `user` (`user_id`) VALUES (%s)""",
-                        (user_id))
+                        (self.user_id))
             db.commit()
             self.exists = True
         if full_name != self.full_name or username != self.username:
