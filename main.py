@@ -473,7 +473,14 @@ class System:
                     parse_mode=telegram.ParseMode.HTML,
                 )
 
-                self.bot.unban_chat_member(chat_id=CENSORED_CHAT_ID, user_id=reviewed_user_id)
+                chat_member = self.bot.get_chat_member(chat_id=CENSORED_CHAT_ID, user_id=reviewed_user_id)
+                if chat_member.status not in [chat_member.ADMINISTRATOR, chat_member.CREATOR]:
+                    try:
+                        self.bot.unban_chat_member(chat_id=CENSORED_CHAT_ID, user_id=reviewed_user_id)
+                    except telegram.error.BadRequest as e:
+                        update.message.reply_text(
+                            '解封時發生錯誤：{}'.format(e),
+                        )
 
                 message = '您的入群申請已通過'
                 if userinfo.admin_comment:
