@@ -310,6 +310,10 @@ class System:
                     parse_mode=telegram.ParseMode.HTML,
                 )
             else:
+                update.message.reply_text(
+                    '{} 未通過申請'.format(userinfo.format_full()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
                 update.effective_chat.kick_member(
                     user_id=user_id,
                     until_date=0,
