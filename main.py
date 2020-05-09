@@ -327,6 +327,7 @@ class System:
                     '{} 目前沒有申請'.format(userinfo.format_user_id()),
                     parse_mode=telegram.ParseMode.HTML,
                 )
+            return
 
         m = re.search(r'^/comment\s*(\d+)\s*([\s\S]+)$', text)
         if m:
@@ -349,6 +350,7 @@ class System:
                     '{} 目前沒有申請'.format(userinfo.format_full()),
                     parse_mode=telegram.ParseMode.HTML,
                 )
+            return
 
         m = re.search(r'^/approve (\d+)$', text)
         if m:
@@ -384,6 +386,7 @@ class System:
                     '{} 目前沒有申請'.format(userinfo.format_full()),
                     parse_mode=telegram.ParseMode.HTML,
                 )
+            return
 
         m = re.search(r'^/reject (\d+)$', text)
         if m:
@@ -417,6 +420,7 @@ class System:
                     '{} 目前沒有申請'.format(userinfo.format_full()),
                     parse_mode=telegram.ParseMode.HTML,
                 )
+            return
 
         m = re.search(r'^/ban (\d+)$', text)
         if m:
@@ -434,6 +438,7 @@ class System:
                     '{} 從未申請過，無法封鎖'.format(userinfo.format_user_id()),
                     parse_mode=telegram.ParseMode.HTML,
                 )
+            return
 
         if re.search(r'^/list_?request$', text):
             cur.execute("""SELECT `user_id` FROM `user` WHERE `status` = %s""",
@@ -451,6 +456,7 @@ class System:
                 message,
                 parse_mode=telegram.ParseMode.HTML,
             )
+            return
 
         m = re.search(r'^/(grant|revoke)[_ ](grant|review)$', text)
         if m:
@@ -503,6 +509,48 @@ class System:
                 update.message.reply_text(
                     '需回應訊息以授權/除權',
                 )
+            return
+
+        # Debug mode on
+
+        m = re.search(r'/set_status (\d+) (new|filling|submitted|rejected|banned|approved|joined)$', text)
+        if m and DEBUG_MODE:
+            reviewed_user_id = int(m.group(1))
+            userinfo = Userinfo(reviewed_user_id)
+            status = m.group(2)
+
+            if userinfo.exists:
+                userinfo.update_status(status)
+                update.message.reply_text(
+                    '已將 {} 的狀態改為 {}'.format(userinfo.format_full(), status),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+            else:
+                update.message.reply_text(
+                    '{} 從未申請過，無法執行'.format(userinfo.format_user_id()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+            return
+
+        m = re.search(r'/delete (\d+)$', text)
+        if m and DEBUG_MODE:
+            reviewed_user_id = int(m.group(1))
+            userinfo = Userinfo(reviewed_user_id)
+
+            if userinfo.exists:
+                cur.execute("""DELETE FROM `user` WHERE `user_id` = %s""",
+                            (reviewed_user_id))
+                db.commit()
+                update.message.reply_text(
+                    '已刪除 {} 的申請'.format(userinfo.format_full()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+            else:
+                update.message.reply_text(
+                    '{} 從未申請過，無法執行'.format(userinfo.format_user_id()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+            return
 
 
 if __name__ == "__main__":
