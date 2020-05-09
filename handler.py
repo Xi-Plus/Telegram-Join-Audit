@@ -5,7 +5,7 @@ import traceback
 
 from flask import Flask, request
 
-from main import log, main
+from main import System
 
 os.environ['TZ'] = 'UTC'
 
@@ -19,12 +19,13 @@ def index():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    system = System()
     try:
         text = request.data.decode('utf8')
         data = json.loads(text)
-        main(data)
+        system.main(data)
     except Exception:
-        log(traceback.format_exc())
+        system.log(traceback.format_exc())
 
     return 'OK'
 
