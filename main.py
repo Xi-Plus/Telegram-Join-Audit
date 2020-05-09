@@ -448,7 +448,7 @@ class System:
 
             if userinfo.status == STATUS.SUBMITTED:
                 userinfo.update_admin_comment(comment)
-                update.message.reply_text('已設定回應訊息')
+                update.message.reply_text('已設定回應訊息，會在批准或拒絕時同時送出')
             else:
                 update.message.reply_text(
                     '{} 目前沒有申請'.format(userinfo.format_full()),
