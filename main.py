@@ -145,6 +145,10 @@ class System:
     def main(self, data):
         update = telegram.Update.de_json(data, self.bot)
 
+        if update.inline_query:
+            self.handle_inline_query(update)
+            return
+
         chat_id = update.effective_chat.id
 
         if chat_id > 0:
@@ -153,6 +157,69 @@ class System:
             self.handle_censored(update)
         elif chat_id == ADMIN_CHAT_ID:
             self.handle_admin(update)
+
+    def handle_inline_query(self, update):
+        m = self.parse_cmd_comment(update.inline_query.query)
+        if m:
+            reviewed_user_id, comment = m
+
+            update.inline_query.answer(
+                results=[
+                    telegram.InlineQueryResultArticle(
+                        id='comment',
+                        title='向{}留言'.format(reviewed_user_id),
+                        description='留言內容為「{}」'.format(comment),
+                        input_message_content=telegram.InputTextMessageContent(
+                            message_text=update.inline_query.query,
+                        )
+                    )
+                ]
+            )
+            return
+
+        reviewed_user_id = self.parse_cmd_approve(update.inline_query.query)
+        if reviewed_user_id:
+            update.inline_query.answer(
+                results=[
+                    telegram.InlineQueryResultArticle(
+                        id='approve',
+                        title='批准{}的申請'.format(reviewed_user_id),
+                        input_message_content=telegram.InputTextMessageContent(
+                            message_text=update.inline_query.query,
+                        )
+                    )
+                ]
+            )
+            return
+
+        reviewed_user_id = self.parse_cmd_reject(update.inline_query.query)
+        if reviewed_user_id:
+            update.inline_query.answer(
+                results=[
+                    telegram.InlineQueryResultArticle(
+                        id='reject',
+                        title='拒絕{}的申請'.format(reviewed_user_id),
+                        input_message_content=telegram.InputTextMessageContent(
+                            message_text=update.inline_query.query,
+                        )
+                    )
+                ]
+            )
+            return
+
+        if update.inline_query.query:
+            update.inline_query.answer(
+                results=[
+                    telegram.InlineQueryResultArticle(
+                        id='unknown',
+                        title=update.inline_query.query,
+                        input_message_content=telegram.InputTextMessageContent(
+                            message_text=update.inline_query.query,
+                        )
+                    )
+                ]
+            )
+            return
 
     def handle_user(self, update):
         text = update.message.text
@@ -343,21 +410,23 @@ class System:
                     + '{1}\n'
                     + '-----\n'
                     + '答案如下：\n'
-                    + '{2}\n'
-                    + '-----\n'
+                    + '{2}'
                 ).format(
                     userinfo.format_full(),
                     userinfo.question,
                     userinfo.answer,
                 )
-                if PERMISSION.REVIEW in admininfo.get_permissions():
-                    message += (
-                        '使用 /comment 設定回應訊息\n'
-                        + '/approve 接受申請，/reject 拒絕申請'
-                    )
-                else:
-                    message += '您沒有權限審核申請'
-                update.message.reply_text(message, parse_mode=telegram.ParseMode.HTML)
+                update.message.reply_text(
+                    text=message,
+                    parse_mode=telegram.ParseMode.HTML,
+                    reply_markup=telegram.InlineKeyboardMarkup([
+                        [
+                            telegram.InlineKeyboardButton(text='留言', switch_inline_query_current_chat='/comment {} 內容'.format(reviewed_user_id)),
+                            telegram.InlineKeyboardButton(text='批准', switch_inline_query_current_chat='/approve {}'.format(reviewed_user_id)),
+                            telegram.InlineKeyboardButton(text='拒絕', switch_inline_query_current_chat='/reject {}'.format(reviewed_user_id)),
+                        ]
+                    ])
+                )
             else:
                 update.message.reply_text(
                     '{} 目前沒有申請'.format(userinfo.format_user_id()),
@@ -365,7 +434,7 @@ class System:
                 )
             return
 
-        m = re.search(r'^/comment\s*(\d+)\s*([\s\S]+)$', text)
+        m = self.parse_cmd_comment(text)
         if m:
             if PERMISSION.REVIEW not in admininfo.get_permissions():
                 update.message.reply_text(
@@ -373,8 +442,7 @@ class System:
                 )
                 return
 
-            reviewed_user_id = int(m.group(1))
-            comment = m.group(2)
+            reviewed_user_id, comment = m
 
             userinfo = Userinfo(reviewed_user_id)
 
@@ -388,15 +456,14 @@ class System:
                 )
             return
 
-        m = re.search(r'^/approve (\d+)$', text)
-        if m:
+        reviewed_user_id = self.parse_cmd_approve(text)
+        if reviewed_user_id:
             if PERMISSION.REVIEW not in admininfo.get_permissions():
                 update.message.reply_text(
                     '您沒有足夠權限進行此操作',
                 )
                 return
 
-            reviewed_user_id = int(m.group(1))
             userinfo = Userinfo(reviewed_user_id)
 
             if userinfo.status == STATUS.SUBMITTED:
@@ -424,15 +491,14 @@ class System:
                 )
             return
 
-        m = re.search(r'^/reject (\d+)$', text)
-        if m:
+        reviewed_user_id = self.parse_cmd_reject(text)
+        if reviewed_user_id:
             if PERMISSION.REVIEW not in admininfo.get_permissions():
                 update.message.reply_text(
                     '您沒有足夠權限進行此操作',
                 )
                 return
 
-            reviewed_user_id = int(m.group(1))
             userinfo = Userinfo(reviewed_user_id)
 
             if userinfo.status == STATUS.SUBMITTED:
@@ -599,6 +665,24 @@ class System:
                     parse_mode=telegram.ParseMode.HTML,
                 )
             return
+
+    def parse_cmd_comment(self, text):
+        m = re.search(r'^/comment\s*(\d+)\s*([\s\S]*)$', text)
+        if m:
+            return int(m.group(1)), m.group(2)
+        return None
+
+    def parse_cmd_approve(self, text):
+        m = re.search(r'^/approve[ _]+(\d+)$', text)
+        if m:
+            return int(m.group(1))
+        return None
+
+    def parse_cmd_reject(self, text):
+        m = re.search(r'^/reject[ _]+(\d+)$', text)
+        if m:
+            return int(m.group(1))
+        return None
 
 
 if __name__ == "__main__":
