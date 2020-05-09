@@ -132,14 +132,6 @@ class Userinfo():
 class System:
     def __init__(self):
         self.bot = telegram.Bot(TG_TOKEN)
-        db = pymysql.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            passwd=DB_PASS,
-            db=DB_DB,
-            charset='utf8mb4',
-        )
-        cur = db.cursor()
 
     def log(self, text):
         cur.execute("""INSERT INTO `log` (`text`) VALUES (%s)""",
