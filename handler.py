@@ -23,7 +23,7 @@ def webhook():
         text = request.data.decode('utf8')
         data = json.loads(text)
         main(data)
-    except Exception as e:
+    except Exception:
         log(traceback.format_exc())
 
     return 'OK'
