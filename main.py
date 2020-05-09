@@ -50,6 +50,7 @@ class Userinfo():
 
         if row is None:
             self.exists = False
+            self.full_name = str(user_id)
         else:
             self.exists = True
             self.full_name = row[0]
@@ -69,6 +70,16 @@ class Userinfo():
             return self.format_user_id()
 
         return '{0} <a href="tg://user?id={0}">{1}</a>{2}'.format(
+            self.user_id,
+            self.full_name,
+            ' (@{})'.format(self.username) if self.username else '',
+        )
+
+    def format_full_raw(self):
+        if not self.exists:
+            return str(self.user_id)
+
+        return '{0} {1}{2}'.format(
             self.user_id,
             self.full_name,
             ' (@{})'.format(self.username) if self.username else '',
@@ -162,13 +173,14 @@ class System:
         m = self.parse_cmd_comment(update.inline_query.query)
         if m:
             reviewed_user_id, comment = m
+            userinfo = Userinfo(reviewed_user_id)
 
             update.inline_query.answer(
                 results=[
                     telegram.InlineQueryResultArticle(
                         id='comment',
-                        title='向{}留言'.format(reviewed_user_id),
-                        description='留言內容為「{}」'.format(comment),
+                        title='向{}留言'.format(userinfo.full_name),
+                        description='{}，留言內容為「{}」'.format(userinfo.format_full_raw(), comment),
                         input_message_content=telegram.InputTextMessageContent(
                             message_text=update.inline_query.query,
                         )
@@ -179,11 +191,14 @@ class System:
 
         reviewed_user_id = self.parse_cmd_approve(update.inline_query.query)
         if reviewed_user_id:
+            userinfo = Userinfo(reviewed_user_id)
+
             update.inline_query.answer(
                 results=[
                     telegram.InlineQueryResultArticle(
                         id='approve',
-                        title='批准{}的申請'.format(reviewed_user_id),
+                        title='批准{}的申請'.format(userinfo.full_name),
+                        description='{}'.format(userinfo.format_full_raw()),
                         input_message_content=telegram.InputTextMessageContent(
                             message_text=update.inline_query.query,
                         )
@@ -194,11 +209,14 @@ class System:
 
         reviewed_user_id = self.parse_cmd_reject(update.inline_query.query)
         if reviewed_user_id:
+            userinfo = Userinfo(reviewed_user_id)
+
             update.inline_query.answer(
                 results=[
                     telegram.InlineQueryResultArticle(
                         id='reject',
-                        title='拒絕{}的申請'.format(reviewed_user_id),
+                        title='拒絕{}的申請'.format(userinfo.full_name),
+                        description='{}'.format(userinfo.format_full_raw()),
                         input_message_content=telegram.InputTextMessageContent(
                             message_text=update.inline_query.query,
                         )
