@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+import traceback
 
 from flask import Flask, request
 
-from main import main, log
+from main import log, main
 
 os.environ['TZ'] = 'UTC'
 
@@ -23,7 +24,8 @@ def webhook():
         data = json.loads(text)
         main(data)
     except Exception as e:
-        log(e)
+        log(traceback.format_exc())
+
     return 'OK'
 
 
