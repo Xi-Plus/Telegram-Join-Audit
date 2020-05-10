@@ -169,11 +169,17 @@ class System:
         elif chat_id == ADMIN_CHAT_ID:
             self.handle_admin(update)
         else:
-            update.effective_message.reply_text(
-                '此群未獲許可使用本機器人',
-                quote=False,
-            )
-            update.effective_chat.leave()
+            try:
+                update.effective_message.reply_text(
+                    '此群未獲許可使用本機器人',
+                    quote=False,
+                )
+            except telegram.error.Unauthorized as e:
+                self.log('{} send message error: {}'.format(chat_id, e))
+            try:
+                update.effective_chat.leave()
+            except telegram.error.Unauthorized as e:
+                self.log('{} leave chat error: {}'.format(chat_id, e))
 
     def handle_inline_query(self, update):
         m = self.parse_cmd_comment(update.inline_query.query)
