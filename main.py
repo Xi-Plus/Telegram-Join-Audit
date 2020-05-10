@@ -432,6 +432,7 @@ class System:
             return
 
         admininfo = Userinfo(update.effective_user.id)
+        admininfo.update_name(update.effective_user.full_name, update.effective_user.username)
 
         self.log('admin {}'.format(text))
 
