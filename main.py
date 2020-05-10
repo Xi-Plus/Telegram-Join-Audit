@@ -391,7 +391,7 @@ class System:
 
     def handle_censored(self, update):
         if update.message.new_chat_members:
-            user_id = update.effective_user.id
+            user_id = update.effective_message.new_chat_members[0].id
 
             userinfo = Userinfo(user_id)
             userinfo.update_name(update.effective_user.full_name, update.effective_user.username)
