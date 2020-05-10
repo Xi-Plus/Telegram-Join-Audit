@@ -435,7 +435,7 @@ class System:
 
         self.log('admin {}'.format(text))
 
-        m = re.search(r'^/review[ _](\d+)(?:@{})$'.format(self.bot.username), text)
+        m = re.search(r'^/review(?:@{})?[ _]+(\d+)$'.format(self.bot.username), text)
         if m:
             reviewed_user_id = int(m.group(1))
             userinfo = Userinfo(reviewed_user_id)
