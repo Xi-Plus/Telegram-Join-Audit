@@ -100,22 +100,22 @@ class Userinfo():
             self.username = username
 
     def update_status(self, status):
-        cur.execute("""UPDATE `user` SET `status` = %s WHERE `user_id` = %s""",
+        cur.execute("""UPDATE `user` SET `status` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
                     (status, self.user_id))
         db.commit()
 
     def update_question(self, question):
-        cur.execute("""UPDATE `user` SET `question` = %s WHERE `user_id` = %s""",
+        cur.execute("""UPDATE `user` SET `question` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
                     (question, self.user_id))
         db.commit()
 
     def update_answer(self, answer):
-        cur.execute("""UPDATE `user` SET `answer` = %s WHERE `user_id` = %s""",
+        cur.execute("""UPDATE `user` SET `answer` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
                     (answer, self.user_id))
         db.commit()
 
     def update_admin_comment(self, admin_comment):
-        cur.execute("""UPDATE `user` SET `admin_comment` = %s WHERE `user_id` = %s""",
+        cur.execute("""UPDATE `user` SET `admin_comment` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
                     (admin_comment, self.user_id))
         db.commit()
 

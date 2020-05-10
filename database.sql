@@ -26,7 +26,9 @@ CREATE TABLE `user` (
   `status` enum('new','filling','submitted','rejected','banned','approved','joined') COLLATE utf8mb4_bin NOT NULL DEFAULT 'new',
   `admin_comment` text COLLATE utf8mb4_bin,
   `question` text COLLATE utf8mb4_bin,
-  `answer` text COLLATE utf8mb4_bin
+  `answer` text COLLATE utf8mb4_bin,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 
