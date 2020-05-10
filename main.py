@@ -395,7 +395,7 @@ class System:
         update.message.reply_text(message)
 
     def handle_censored(self, update):
-        if update.message.new_chat_members:
+        if update.message and update.message.new_chat_members:
             new_member = update.effective_message.new_chat_members[0]
             user_id = new_member.id
 
