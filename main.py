@@ -66,6 +66,15 @@ class Userinfo():
             self.user_id,
         )
 
+    def format_full_name(self):
+        if not self.exists:
+            return self.format_user_id()
+
+        return '<a href="tg://user?id={0}">{1}</a>'.format(
+            self.user_id,
+            self.full_name,
+        )
+
     def format_full(self):
         if not self.exists:
             return self.format_user_id()
@@ -655,6 +664,26 @@ class System:
                 update.message.reply_text(
                     '需回應訊息以授權/除權',
                 )
+            return
+
+        if re.search(r'^/list_?permissions?$', text):
+            cur.execute("""SELECT `admin_user_id`, `permission` FROM `permissions` ORDER BY `admin_user_id` ASC""")
+            rows = cur.fetchall()
+            users = {
+                'review': [],
+                'grant': [],
+                'super': [],
+            }
+            for row in rows:
+                userinfo = Userinfo(row[0])
+                users[row[1]].append(userinfo.format_full_name())
+            message = '權限表：\n'
+            for permission in ['review', 'grant', 'super']:
+                message += '{}：{}\n'.format(permission, '、'.join(users[permission]))
+            update.message.reply_text(
+                message,
+                parse_mode=telegram.ParseMode.HTML,
+            )
             return
 
         # Debug mode on
