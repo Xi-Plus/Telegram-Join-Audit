@@ -75,11 +75,11 @@
 撤銷其他人授權權限，需要有 `super` 權限
 
 #### /set_status
-設定申請狀態，僅在 Debug Mode 啟用時有效
+設定申請狀態，僅在 Debug Mode 啟用時有效，需要有 `review` 權限
 * `/set_status 12345 new` 將12345的申請狀態設定為 `new`
 
 #### /delete
-刪除使用者，僅在 Debug Mode 啟用時有效
+刪除使用者，僅在 Debug Mode 啟用時有效，需要有 `review` 權限
 * `/delete 12345` 刪除使用者12345
 
 ## Status
