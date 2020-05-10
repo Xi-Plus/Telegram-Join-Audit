@@ -1,3 +1,4 @@
+import json
 import random
 import re
 import time
@@ -158,6 +159,10 @@ class System:
 
         if update.inline_query:
             self.handle_inline_query(update)
+            return
+
+        if not update.effective_chat:
+            self.log(json.dumps(data))
             return
 
         chat_id = update.effective_chat.id
