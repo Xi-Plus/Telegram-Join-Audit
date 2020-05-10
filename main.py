@@ -391,10 +391,11 @@ class System:
 
     def handle_censored(self, update):
         if update.message.new_chat_members:
-            user_id = update.effective_message.new_chat_members[0].id
+            new_member = update.effective_message.new_chat_members[0]
+            user_id = new_member.id
 
             userinfo = Userinfo(user_id)
-            userinfo.update_name(update.effective_user.full_name, update.effective_user.username)
+            userinfo.update_name(new_member.full_name, new_member.username)
 
             if userinfo.status == STATUS.APPROVED:
                 userinfo.update_status(STATUS.JOINED)
