@@ -486,7 +486,7 @@ class System:
                 )
             else:
                 update.message.reply_text(
-                    '{} 目前沒有申請'.format(userinfo.format_user_id()),
+                    '{} 目前沒有申請'.format(userinfo.format_full()),
                     parse_mode=telegram.ParseMode.HTML,
                 )
             return
