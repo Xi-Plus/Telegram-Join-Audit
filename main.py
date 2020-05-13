@@ -376,9 +376,21 @@ class System:
             return
 
         elif userinfo.status == STATUS.JOINED:
-            if text == '/join' and DEBUG_MODE:
-                self.user_join_link(update)
-                return
+            if text == '/join':
+                if PERMISSION.REVIEW in userinfo.get_permissions():
+                    self.user_join_link(update, True)
+                    return
+
+                chat_member = self.bot.get_chat_member(chat_id=CENSORED_CHAT_ID, user_id=user_id)
+                if chat_member.status in chat_member.LEFT:
+                    self.user_join_link(update)
+                    return
+
+                if chat_member.status in chat_member.KICKED:
+                    update.message.reply_text(
+                        '您已被管理員踢出群組',
+                    )
+                    return
 
             update.message.reply_text(
                 '您已加入群組',
@@ -399,14 +411,17 @@ class System:
             '您的入群問題為：\n{}\n----\n請使用 /answer 換行後接著您的答案，答案請註明題號'.format(user_questions)
         )
 
-    def user_join_link(self, update):
+    def user_join_link(self, update, isadmin=False):
         link = self.bot.export_chat_invite_link(chat_id=CENSORED_CHAT_ID)
         message = (
             '加群連結為\n'
             + '{}\n'
-            + '請立即加入群組以免連結失效\n'
-            + '此連結僅限您可使用，分享給他人將導致您的入群許可被撤銷'
         ).format(link)
+        if not isadmin:
+            message += (
+                '請立即加入群組以免連結失效\n'
+                + '此連結僅限您可使用，分享給他人將導致您的入群許可被撤銷\n'
+            )
 
         update.message.reply_text(
             message,
