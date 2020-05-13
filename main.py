@@ -408,7 +408,10 @@ class System:
             + '此連結僅限您可使用，分享給他人將導致您的入群許可被撤銷'
         ).format(link)
 
-        update.message.reply_text(message)
+        update.message.reply_text(
+            message,
+            disable_web_page_preview=True,
+        )
 
     def handle_censored(self, update):
         if update.message and update.message.new_chat_members:
