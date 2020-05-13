@@ -39,12 +39,13 @@ class Userinfo():
     full_name = None
     username = None
     status = STATUS.NEW
+    kicked = False
     admin_comment = None
 
     def __init__(self, user_id):
         self.user_id = user_id
 
-        cur.execute("""SELECT `full_name`, `username`, `status`, `admin_comment`, `question`, `answer`
+        cur.execute("""SELECT `full_name`, `username`, `status`, `kicked`, `admin_comment`, `question`, `answer`
                     FROM `user` WHERE `user_id` = %s""",
                     (user_id))
         row = cur.fetchone()
@@ -54,12 +55,13 @@ class Userinfo():
             self.full_name = str(user_id)
         else:
             self.exists = True
-            self.full_name = row[0]
-            self.username = row[1]
-            self.status = row[2]
-            self.admin_comment = row[3]
-            self.question = row[4]
-            self.answer = row[5]
+            (self.full_name,
+             self.username,
+             self.status,
+             self.kicked,
+             self.admin_comment,
+             self.question,
+             self.answer) = row
 
     def format_user_id(self):
         return '<a href="tg://user?id={0}">{0}</a>'.format(
@@ -112,6 +114,11 @@ class Userinfo():
     def update_status(self, status):
         cur.execute("""UPDATE `user` SET `status` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
                     (status, self.user_id))
+        db.commit()
+
+    def update_kicked(self, kicked):
+        cur.execute("""UPDATE `user` SET `kicked` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
+                    (kicked, self.user_id))
         db.commit()
 
     def update_question(self, question):
@@ -433,6 +440,7 @@ class System:
                     user_id=user_id,
                     until_date=until_date,
                 )
+                userinfo.update_kicked(True)
 
     def handle_admin(self, update):
         text = update.message.text
@@ -520,9 +528,10 @@ class System:
                 )
 
                 chat_member = self.bot.get_chat_member(chat_id=CENSORED_CHAT_ID, user_id=reviewed_user_id)
-                if chat_member.status not in [chat_member.ADMINISTRATOR, chat_member.CREATOR]:
+                if userinfo.kicked and chat_member.status not in [chat_member.ADMINISTRATOR, chat_member.CREATOR]:
                     try:
                         self.bot.unban_chat_member(chat_id=CENSORED_CHAT_ID, user_id=reviewed_user_id)
+                        userinfo.update_kicked(False)
                     except telegram.error.BadRequest as e:
                         update.message.reply_text(
                             '解封時發生錯誤：{}'.format(e),
