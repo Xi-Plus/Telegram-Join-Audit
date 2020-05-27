@@ -222,6 +222,24 @@ class System:
             )
             return
 
+        reviewed_user_id = self.parse_cmd_reanswer(update.inline_query.query)
+        if reviewed_user_id:
+            userinfo = Userinfo(reviewed_user_id)
+
+            update.inline_query.answer(
+                results=[
+                    telegram.InlineQueryResultArticle(
+                        id='reanswer',
+                        title='要求{}重新作答'.format(userinfo.full_name),
+                        description='{}'.format(userinfo.format_full_raw()),
+                        input_message_content=telegram.InputTextMessageContent(
+                            message_text=update.inline_query.query,
+                        )
+                    )
+                ]
+            )
+            return
+
         reviewed_user_id = self.parse_cmd_approve(update.inline_query.query)
         if reviewed_user_id:
             userinfo = Userinfo(reviewed_user_id)
@@ -494,6 +512,7 @@ class System:
                     reply_markup=telegram.InlineKeyboardMarkup([
                         [
                             telegram.InlineKeyboardButton(text='留言', switch_inline_query_current_chat='/comment {} 內容'.format(reviewed_user_id)),
+                            telegram.InlineKeyboardButton(text='重答', switch_inline_query_current_chat='/reanswer {}'.format(reviewed_user_id)),
                             telegram.InlineKeyboardButton(text='批准', switch_inline_query_current_chat='/approve {}'.format(reviewed_user_id)),
                             telegram.InlineKeyboardButton(text='拒絕', switch_inline_query_current_chat='/reject {}'.format(reviewed_user_id)),
                         ]
@@ -520,7 +539,40 @@ class System:
 
             if userinfo.status == STATUS.SUBMITTED:
                 userinfo.update_admin_comment(comment)
-                update.message.reply_text('已設定回應訊息，會在批准或拒絕時同時送出')
+                update.message.reply_text('已設定回應訊息，會在要求重答、批准或拒絕時同時送出')
+            else:
+                update.message.reply_text(
+                    '{} 目前沒有申請'.format(userinfo.format_full()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+            return
+
+        reviewed_user_id = self.parse_cmd_reanswer(text)
+        if reviewed_user_id:
+            if PERMISSION.REVIEW not in admininfo.get_permissions():
+                update.message.reply_text(
+                    '您沒有足夠權限進行此操作',
+                )
+                return
+
+            userinfo = Userinfo(reviewed_user_id)
+
+            if userinfo.status == STATUS.SUBMITTED:
+                userinfo.update_status(STATUS.FILLING)
+                update.message.reply_text(
+                    '已要求 {} 重新作答'.format(userinfo.format_full()),
+                    parse_mode=telegram.ParseMode.HTML,
+                )
+
+                message = '管理員要求您重新作答'
+                if userinfo.admin_comment:
+                    message += '\n管理員有此留言：{}\n'.format(userinfo.admin_comment)
+                message += '使用 /request 查看您的問題及之前的答案，使用 /answer 修改答案'
+
+                self.bot.send_message(
+                    chat_id=reviewed_user_id,
+                    text=message,
+                )
             else:
                 update.message.reply_text(
                     '{} 目前沒有申請'.format(userinfo.format_full()),
@@ -770,6 +822,12 @@ class System:
         m = re.search(r'^/comment\s*(\d+)\s*([\s\S]*)$', text)
         if m:
             return int(m.group(1)), m.group(2)
+        return None
+
+    def parse_cmd_reanswer(self, text):
+        m = re.search(r'^/reanswer[ _]+(\d+)$', text)
+        if m:
+            return int(m.group(1))
         return None
 
     def parse_cmd_approve(self, text):
