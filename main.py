@@ -610,7 +610,7 @@ class System:
                 message = '您的入群申請已通過'
                 if userinfo.admin_comment:
                     message += '\n管理員有此留言：{}\n'.format(userinfo.admin_comment)
-                message += '使用 /join 取得加群連結'
+                message += '\n使用 /join 取得加群連結'
 
                 self.bot.send_message(
                     chat_id=reviewed_user_id,
