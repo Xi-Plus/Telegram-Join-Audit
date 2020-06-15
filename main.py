@@ -170,6 +170,11 @@ class System:
                     (str(text)))
         db.commit()
 
+    def get_requests(self):
+        cur.execute("""SELECT `user_id` FROM `user` WHERE `status` = %s""",
+                    (STATUS.SUBMITTED))
+        return cur.fetchall()
+
     def main(self, data):
         update = telegram.Update.de_json(data, self.bot)
 
@@ -560,7 +565,10 @@ class System:
             if userinfo.status == STATUS.SUBMITTED:
                 userinfo.update_status(STATUS.FILLING)
                 update.message.reply_text(
-                    '已要求 {} 重新作答'.format(userinfo.format_full()),
+                    '已要求 {} 重新作答，剩餘{}筆申請'.format(
+                        userinfo.format_full(),
+                        len(self.get_requests()),
+                    ),
                     parse_mode=telegram.ParseMode.HTML,
                 )
 
@@ -593,7 +601,10 @@ class System:
             if userinfo.status == STATUS.SUBMITTED:
                 userinfo.update_status(STATUS.APPROVED)
                 update.message.reply_text(
-                    '已批准 {} 的申請'.format(userinfo.format_full()),
+                    '已批准 {} 的申請，剩餘{}筆申請'.format(
+                        userinfo.format_full(),
+                        len(self.get_requests()),
+                    ),
                     parse_mode=telegram.ParseMode.HTML,
                 )
 
@@ -636,7 +647,10 @@ class System:
             if userinfo.status == STATUS.SUBMITTED:
                 userinfo.update_status(STATUS.REJECTED)
                 update.message.reply_text(
-                    '已拒絕 {} 的申請'.format(userinfo.format_full()),
+                    '已拒絕 {} 的申請，剩餘{}筆申請'.format(
+                        userinfo.format_full(),
+                        len(self.get_requests()),
+                    ),
                     parse_mode=telegram.ParseMode.HTML,
                 )
 
@@ -675,15 +689,13 @@ class System:
             return
 
         if re.search(r'^/list_?request$', text):
-            cur.execute("""SELECT `user_id` FROM `user` WHERE `status` = %s""",
-                        (STATUS.SUBMITTED))
-            rows = cur.fetchall()
-            if len(rows) == 0:
+            requests = self.get_requests()
+            if len(requests) == 0:
                 message = '目前沒有申請'
             else:
-                message = '目前有{}筆申請：\n'.format(len(rows))
-                for row in rows:
-                    userinfo = Userinfo(row[0])
+                message = '目前有{}筆申請：\n'.format(len(requests))
+                for request in requests:
+                    userinfo = Userinfo(request[0])
                     message += '{}\n'.format(userinfo.format_full())
                 message += '使用 /review 來查看申請'
             update.message.reply_text(
