@@ -621,7 +621,7 @@ class System:
                 message = '您的入群申請已通過'
                 if userinfo.admin_comment:
                     message += '\n管理員有此留言：{}\n'.format(userinfo.admin_comment)
-                message += '\n使用 /join 取得加群連結'
+                message += '\n稍待幾分鐘後使用 /join 取得加群連結（如立即加入可能遭誤判為未通過申請）'
 
                 self.bot.send_message(
                     chat_id=reviewed_user_id,
