@@ -24,12 +24,15 @@ CREATE TABLE `user` (
   `full_name` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `username` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `status` enum('new','filling','submitted','rejected','banned','approved','joined') COLLATE utf8mb4_bin NOT NULL DEFAULT 'new',
-  `admin_comment` text COLLATE utf8mb4_bin,
+  `kicked` tinyint(1) NOT NULL DEFAULT '0',
   `question` text COLLATE utf8mb4_bin,
   `answer` text COLLATE utf8mb4_bin,
+  `admin_comment` text COLLATE utf8mb4_bin,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`xiplus`@`localhost` SQL SECURITY DEFINER VIEW `view_permissions`  AS  select `permissions`.`admin_user_id` AS `admin_user_id`,`user`.`full_name` AS `full_name`,`user`.`username` AS `username`,`permissions`.`permission` AS `permission` from (`permissions` left join `user` on((`permissions`.`admin_user_id` = `user`.`user_id`))) ;
 
 
 ALTER TABLE `permissions`
