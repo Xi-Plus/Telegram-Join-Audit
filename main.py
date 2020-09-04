@@ -323,7 +323,7 @@ class System:
                 message = '您的入群問題為：\n{}\n-----\n'.format(userinfo.question)
                 if userinfo.answer:
                     message += '您目前答案為：\n{}\n-----\n'.format(userinfo.answer)
-                message += '請使用 /answer 換行後接著您的答案，答案請註明題號'
+                message += '請使用 /answer 換行後接著您所有的答案，答案請註明題號'
                 update.message.reply_text(message)
                 return
 
@@ -338,9 +338,9 @@ class System:
                 answer = m.group(1)
                 userinfo.update_answer(answer)
                 update.message.reply_text(
-                    '已收到您的答案，使用 /request 確認您目前儲存的答案\n'
-                    + '可再次使用 /answer 覆蓋您的答案\n'
-                    + '或是使用 /submit 送出申請，送出申請後則無法再修改答案'
+                    '已儲存您的答案但尚未提交申請，使用 /request 確認您目前儲存的答案\n'
+                    + '再次使用 /answer 覆蓋您的答案\n'
+                    + '使用 /submit 提交申請，提交申請後則無法再修改答案'
                 )
                 return
 
