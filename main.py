@@ -9,16 +9,6 @@ import telegram
 from config import *  # pylint: disable=E0401,W0401,W0614
 
 
-db = pymysql.connect(
-    host=DB_HOST,
-    user=DB_USER,
-    passwd=DB_PASS,
-    db=DB_DB,
-    charset='utf8mb4',
-)
-cur = db.cursor()
-
-
 class STATUS:
     NEW = 'new'
     FILLING = 'filling'
@@ -45,10 +35,19 @@ class Userinfo():
     def __init__(self, user_id):
         self.user_id = user_id
 
-        cur.execute("""SELECT `full_name`, `username`, `status`, `kicked`, `admin_comment`, `question`, `answer`
+        self.db = pymysql.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            passwd=DB_PASS,
+            db=DB_DB,
+            charset='utf8mb4',
+        )
+        self.cur = self.db.cursor()
+
+        self.cur.execute("""SELECT `full_name`, `username`, `status`, `kicked`, `admin_comment`, `question`, `answer`
                     FROM `user` WHERE `user_id` = %s""",
-                    (user_id))
-        row = cur.fetchone()
+                         (user_id))
+        row = self.cur.fetchone()
 
         if row is None:
             self.exists = False
@@ -99,49 +98,49 @@ class Userinfo():
 
     def update_name(self, full_name, username):
         if not self.exists:
-            cur.execute("""INSERT INTO `user` (`user_id`) VALUES (%s)""",
-                        (self.user_id))
-            db.commit()
+            self.cur.execute("""INSERT INTO `user` (`user_id`) VALUES (%s)""",
+                             (self.user_id))
+            self.db.commit()
             self.exists = True
         if full_name != self.full_name or username != self.username:
-            cur.execute("""UPDATE `user` SET `full_name` = %s, `username` = %s WHERE `user_id` = %s""",
-                        (full_name, username, self.user_id))
-            db.commit()
+            self.cur.execute("""UPDATE `user` SET `full_name` = %s, `username` = %s WHERE `user_id` = %s""",
+                             (full_name, username, self.user_id))
+            self.db.commit()
 
             self.full_name = full_name
             self.username = username
 
     def update_status(self, status):
-        cur.execute("""UPDATE `user` SET `status` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
-                    (status, self.user_id))
-        db.commit()
+        self.cur.execute("""UPDATE `user` SET `status` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
+                         (status, self.user_id))
+        self.db.commit()
 
     def update_kicked(self, kicked):
-        cur.execute("""UPDATE `user` SET `kicked` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
-                    (kicked, self.user_id))
-        db.commit()
+        self.cur.execute("""UPDATE `user` SET `kicked` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
+                         (kicked, self.user_id))
+        self.db.commit()
 
     def update_question(self, question):
-        cur.execute("""UPDATE `user` SET `question` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
-                    (question, self.user_id))
-        db.commit()
+        self.cur.execute("""UPDATE `user` SET `question` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
+                         (question, self.user_id))
+        self.db.commit()
 
     def update_answer(self, answer):
-        cur.execute("""UPDATE `user` SET `answer` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
-                    (answer, self.user_id))
-        db.commit()
+        self.cur.execute("""UPDATE `user` SET `answer` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
+                         (answer, self.user_id))
+        self.db.commit()
 
     def update_admin_comment(self, admin_comment):
-        cur.execute("""UPDATE `user` SET `admin_comment` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
-                    (admin_comment, self.user_id))
-        db.commit()
+        self.cur.execute("""UPDATE `user` SET `admin_comment` = %s, `updated_at` = CURRENT_TIMESTAMP WHERE `user_id` = %s""",
+                         (admin_comment, self.user_id))
+        self.db.commit()
 
     def get_permissions(self):
         permissions = []
 
-        cur.execute("""SELECT `permission` FROM `permissions` WHERE `admin_user_id` = %s""",
-                    (self.user_id))
-        rows = cur.fetchall()
+        self.cur.execute("""SELECT `permission` FROM `permissions` WHERE `admin_user_id` = %s""",
+                         (self.user_id))
+        rows = self.cur.fetchall()
         for row in rows:
             permissions.append(row[0])
 
@@ -149,31 +148,43 @@ class Userinfo():
 
     def grant(self, permission):
         try:
-            cur.execute("""INSERT INTO `permissions` (`admin_user_id`, `permission`) VALUES (%s, %s)""",
-                        (self.user_id, permission))
-            db.commit()
+            self.cur.execute("""INSERT INTO `permissions` (`admin_user_id`, `permission`) VALUES (%s, %s)""",
+                             (self.user_id, permission))
+            self.db.commit()
         except pymysql.err.IntegrityError:
             pass
 
     def revoke(self, permission):
-        cur.execute("""DELETE FROM `permissions` WHERE `admin_user_id` = %s AND `permission` = %s""",
-                    (self.user_id, permission))
-        db.commit()
+        self.cur.execute("""DELETE FROM `permissions` WHERE `admin_user_id` = %s AND `permission` = %s""",
+                         (self.user_id, permission))
+        self.db.commit()
+
+    def __del__(self):
+        self.cur.close()
+        self.db.close()
 
 
 class System:
     def __init__(self):
         self.bot = telegram.Bot(TG_TOKEN)
+        self.db = pymysql.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            passwd=DB_PASS,
+            db=DB_DB,
+            charset='utf8mb4',
+        )
+        self.cur = self.db.cursor()
 
     def log(self, text):
-        cur.execute("""INSERT INTO `log` (`text`) VALUES (%s)""",
-                    (str(text)))
-        db.commit()
+        self.cur.execute("""INSERT INTO `log` (`text`) VALUES (%s)""",
+                         (str(text)))
+        self.db.commit()
 
     def get_requests(self):
-        cur.execute("""SELECT `user_id` FROM `user` WHERE `status` = %s""",
-                    (STATUS.SUBMITTED))
-        return cur.fetchall()
+        self.cur.execute("""SELECT `user_id` FROM `user` WHERE `status` = %s""",
+                         (STATUS.SUBMITTED))
+        return self.cur.fetchall()
 
     def main(self, data):
         update = telegram.Update.de_json(data, self.bot)
@@ -758,8 +769,8 @@ class System:
             return
 
         if re.search(r'^/list_?permissions?$', text):
-            cur.execute("""SELECT `admin_user_id`, `permission` FROM `permissions` ORDER BY `admin_user_id` ASC""")
-            rows = cur.fetchall()
+            self.cur.execute("""SELECT `admin_user_id`, `permission` FROM `permissions` ORDER BY `admin_user_id` ASC""")
+            rows = self.cur.fetchall()
             users = {
                 'review': [],
                 'grant': [],
@@ -816,9 +827,9 @@ class System:
             userinfo = Userinfo(reviewed_user_id)
 
             if userinfo.exists:
-                cur.execute("""DELETE FROM `user` WHERE `user_id` = %s""",
-                            (reviewed_user_id))
-                db.commit()
+                self.cur.execute("""DELETE FROM `user` WHERE `user_id` = %s""",
+                                 (reviewed_user_id))
+                self.db.commit()
                 update.message.reply_text(
                     '已刪除 {} 的申請'.format(userinfo.format_full()),
                     parse_mode=telegram.ParseMode.HTML,
@@ -853,6 +864,10 @@ class System:
         if m:
             return int(m.group(1))
         return None
+
+    def __del__(self):
+        self.cur.close()
+        self.db.close()
 
 
 if __name__ == "__main__":
