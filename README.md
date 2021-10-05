@@ -78,6 +78,9 @@
 #### /revoke_grant
 撤銷其他人授權權限，需要有 `super` 權限
 
+#### /list_permissions
+列出擁有權限的使用者
+
 #### /set_status
 設定申請狀態，僅在 Debug Mode 啟用時有效，需要有 `review` 權限
 * `/set_status 12345 new` 將12345的申請狀態設定為 `new`
