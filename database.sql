@@ -1,5 +1,4 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -15,12 +14,12 @@ CREATE TABLE `log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `permissions` (
-  `admin_user_id` int(11) NOT NULL,
+  `admin_user_id` bigint(20) NOT NULL,
   `permission` enum('super','grant','review') COLLATE utf8mb4_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE `user` (
-  `user_id` int(11) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
   `full_name` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `username` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL,
   `status` enum('new','filling','submitted','rejected','banned','approved','joined') COLLATE utf8mb4_bin NOT NULL DEFAULT 'new',
@@ -31,8 +30,15 @@ CREATE TABLE `user` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE `view_permissions` (
+`admin_user_id` bigint(20)
+,`full_name` varchar(255)
+,`username` varchar(255)
+,`permission` enum('super','grant','review')
+);
+DROP TABLE IF EXISTS `view_permissions`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`xiplus`@`localhost` SQL SECURITY DEFINER VIEW `view_permissions`  AS  select `permissions`.`admin_user_id` AS `admin_user_id`,`user`.`full_name` AS `full_name`,`user`.`username` AS `username`,`permissions`.`permission` AS `permission` from (`permissions` left join `user` on((`permissions`.`admin_user_id` = `user`.`user_id`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`xiplus`@`localhost` SQL SECURITY DEFINER VIEW `view_permissions`  AS SELECT `permissions`.`admin_user_id` AS `admin_user_id`, `user`.`full_name` AS `full_name`, `user`.`username` AS `username`, `permissions`.`permission` AS `permission` FROM (`permissions` left join `user` on((`permissions`.`admin_user_id` = `user`.`user_id`))) ;
 
 
 ALTER TABLE `permissions`
