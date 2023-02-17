@@ -1,3 +1,4 @@
+import html
 import json
 import random
 import re
@@ -82,7 +83,7 @@ class Userinfo():
 
         return '{0} <a href="tg://user?id={0}">{1}</a>{2}'.format(
             self.user_id,
-            self.full_name,
+            html.escape(self.full_name),
             ' (@{})'.format(self.username) if self.username else '',
         )
 
